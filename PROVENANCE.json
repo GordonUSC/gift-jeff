@@ -1,0 +1,18 @@
+{
+ "img/hero.jpg": {
+  "tool": "higgsfield",
+  "prompt": "neon Pacific grid map with star controller (job 5fdb728d) gpt_image_2_5"
+ },
+ "snd/boot.mp3": {
+  "tool": "elevenlabs",
+  "prompt": "retro console boot jingle (flow 8av4Ta0LwvgeXGMhvGYX)"
+ },
+ "snd/blip.mp3": {
+  "tool": "elevenlabs",
+  "prompt": "arcade power-up blip (flow 8av4Ta0LwvgeXGMhvGYX)"
+ },
+ "snd/fanfare.mp3": {
+  "tool": "elevenlabs",
+  "prompt": "chiptune level complete fanfare (flow 8av4Ta0LwvgeXGMhvGYX)"
+ }
+}

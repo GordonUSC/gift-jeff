@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- STYLE: Synthwave arcade cartography (neon Pacific grid, Press Start 2P pixel type) | WHY: Jeff connects game makers across the Americas and ANZ and backs play for kids in hospitals, so the gift is a map you power up like a console | ALT: Clean corporate network diagram, rejected as cold -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Press Start</title>
+<meta name="description" content="Power up the Pacific, for Jeff.">
+<meta property="og:title" content="Press Start, for Jeff">
+<meta property="og:image" content="https://gordonusc.github.io/gift-jeff/img/hero.jpg">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+:root{--cyan:#45f0ff;--pink:#ff4fd8;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#0a0420;color:#fff;font:16px/1.45 "Space Grotesk",system-ui,sans-serif;overflow:hidden;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.stage{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);width:min(100vw,calc(100svh*9/16));overflow:hidden}
+.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.5) saturate(.7);transition:filter 1.2s}
+.stage.on .bg{filter:none}
+canvas{position:absolute;inset:0;width:100%;height:100%}
+.top{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 20px);text-align:center;padding:0 16px;text-shadow:0 0 12px #000}
+.top small{font:400 10px "Press Start 2P",monospace;color:var(--pink);letter-spacing:.1em}
+.top h1{font:400 clamp(20px,6.5vw,30px)/1.3 "Press Start 2P",monospace;margin:12px 0 10px;color:var(--cyan);text-shadow:0 0 14px var(--cyan)}
+.top p{margin:0 auto;max-width:30ch;font-size:15px}
+.btn{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 40px);font:400 14px "Press Start 2P",monospace;padding:16px 22px;border-radius:10px;border:3px solid var(--cyan);background:#0a0420cc;color:var(--cyan);cursor:pointer;box-shadow:0 0 22px #45f0ff88;white-space:nowrap;animation:blink 1.2s steps(2) infinite}
+@keyframes blink{50%{opacity:.55}}
+.btn[hidden]{display:none}
+.hud{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 40px);text-align:center;font:400 11px "Press Start 2P",monospace;color:var(--pink)}
+.end{position:absolute;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 80px);text-align:center;padding:18px;border:3px solid var(--pink);border-radius:12px;background:#0a0420e6;opacity:0;transform:scale(.8);transition:all .5s;pointer-events:none}
+.end.on{opacity:1;transform:none}
+.end h2{font:400 15px/1.5 "Press Start 2P",monospace;color:var(--pink);margin:0 0 10px}
+.foot{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);text-align:center;font-size:11px;opacity:.6}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <img class="bg" src="img/hero.jpg" alt="A neon map of the Pacific connecting the Americas with New Zealand and Australia">
+  <canvas id="c"></canvas>
+  <div class="top"><small>FOR JEFF</small><h1>PRESS START</h1><p>You connect game makers across an ocean and back play for kids who need it most. Power up the map.</p></div>
+  <button class="btn" id="start">PRESS START</button>
+  <div class="hud" id="hud" hidden>TAP EVERY NODE · <span id="n">0</span>/8</div>
+  <div class="end" id="end"><h2>PLAYER 2 HAS JOINED</h2>Gordon is so glad you're on his team, on every side of the Pacific. Never forgotten.</div>
+  <div class="foot">made by Darby, Gordon's AI assistant, with love from Gordon</div>
+</div>
+<script>
+// ElevenLabs sound design: console boot, power-up blip, level fanfare. Code only mixes.
+let ac=null, master=null, bufs={};
+function audio(){ if(!ac){ try{ ac=new (window.AudioContext||window.webkitAudioContext)(); master=ac.createGain(); master.gain.value=.9; master.connect(ac.destination); ['boot','blip','fanfare'].forEach(load);}catch(e){} } if(ac&&ac.state==='suspended') ac.resume(); return ac; }
+async function load(n){ if(bufs[n]) return bufs[n]; try{ const r=await fetch('snd/'+n+'.mp3'); const a=await r.arrayBuffer(); bufs[n]=await new Promise((ok,no)=>ac.decodeAudioData(a,ok,no)); }catch(e){} return bufs[n]; }
+async function play(n,vol=1,rate=1){ if(!audio()) return; const b=await load(n); if(!b) return; const s=ac.createBufferSource(), g=ac.createGain(); s.buffer=b; s.playbackRate.value=rate; g.gain.value=vol; s.connect(g).connect(master); s.start(); }
+const c=document.getElementById('c'), x=c.getContext('2d'), D=Math.min(devicePixelRatio||1,2);
+function size(){ c.width=c.clientWidth*D; c.height=c.clientHeight*D; } size(); addEventListener('resize',size);
+const NODES=[[.18,.62],[.30,.48],[.22,.80],[.45,.58],[.62,.70],[.78,.56],[.86,.72],[.70,.84]];
+const nodes=NODES.map(([u,v],i)=>({u,v,on:0,i})); let live=false, count=0, links=[];
+document.getElementById('start').onclick=()=>{ audio(); play('boot',.9); document.getElementById('start').hidden=true; document.getElementById('hud').hidden=false; document.getElementById('stage').classList.add('on'); live=true; };
+c.addEventListener('pointerdown',e=>{ if(!live) return; const r=c.getBoundingClientRect(), px=(e.clientX-r.left)*D, py=(e.clientY-r.top)*D;
+  for(const n of nodes){ if(!n.on && Math.hypot(px-n.u*c.width,py-n.v*c.height)<40*D){ n.on=.01; const prev=nodes.filter(m=>m.on&&m!==n).pop(); if(prev) links.push([prev,n,0]); count++; document.getElementById('n').textContent=count; play('blip',.8,Math.pow(2,count/12));
+      if(count===nodes.length){ live=false; setTimeout(()=>{ play('fanfare',.95); document.getElementById('end').classList.add('on'); document.getElementById('hud').hidden=true; },500); } return; } } });
+(function loop(now){ x.clearRect(0,0,c.width,c.height);
+  links.forEach(L=>{ L[2]=Math.min(L[2]+.04,1); const [a,b,k]=L, ax=a.u*c.width, ay=a.v*c.height, bx=ax+(b.u*c.width-ax)*k, by=ay+(b.v*c.height-ay)*k; x.strokeStyle='#ff4fd8'; x.shadowColor='#ff4fd8'; x.shadowBlur=14*D; x.lineWidth=3*D; x.beginPath(); x.moveTo(ax,ay); x.lineTo(bx,by); x.stroke(); }); x.shadowBlur=0;
+  if(live||count) nodes.forEach(n=>{ const nx=n.u*c.width, ny=n.v*c.height; if(n.on) n.on=Math.min(n.on+.05,1); const pulse=.5+.5*Math.sin(now/300+n.i);
+    x.fillStyle=n.on?'#45f0ff':`rgba(69,240,255,${.25+.25*pulse})`; x.shadowColor='#45f0ff'; x.shadowBlur=(n.on?20:8)*D; x.fillRect(nx-8*D,ny-8*D,16*D,16*D); x.shadowBlur=0;
+    if(!n.on){ x.strokeStyle=`rgba(69,240,255,${.5*pulse})`; x.lineWidth=2*D; x.strokeRect(nx-18*D,ny-18*D,36*D,36*D); } });
+  requestAnimationFrame(loop); })(0);
+</script>
+</body>
+</html>
